@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Animasi DFS & BFS - Graf Tree Interaktif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: clamp(20px, 6vw, 28px);
+            margin-bottom: 5px;
+        }
+        
+        header p {
+            font-size: clamp(12px, 3vw, 14px);
+        }
+        
+        .content {
+            padding: clamp(15px, 4vw, 30px);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 24px);
+            font-size: clamp(12px, 2.5vw, 14px);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            flex: 1 1 auto;
+            min-width: 80px;
+            max-width: 150px;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .target-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: clamp(10px, 3vw, 15px);
+            background: #e8eeff;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .target-selection label {
+            font-weight: bold;
+            color: #333;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        .target-selection select {
+            padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            font-size: clamp(12px, 2.5vw, 14px);
+            cursor: pointer;
+            background: white;
+            color: #333;
+        }
+        
+        .target-selection select:hover {
+            border-color: #764ba2;
+        }
+        
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: clamp(10px, 3vw, 20px);
+            border-radius: 8px;
+            aspect-ratio: 6/5;
+            min-height: 250px;
+            max-height: 600px;
+        }
+        
+        canvas {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .info-panel {
+            background: #f0f4ff;
+            padding: clamp(12px, 3vw, 20px);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: clamp(14px, 3vw, 18px);
+        }
+        
+        .info-panel p {
+            font-size: clamp(13px, 2.5vw, 14px);
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .visit-order {
+            background: #fff3cd;
+            padding: clamp(10px, 2.5vw, 15px);
+            border-radius: 6px;
+            border-left: 3px solid #ffc107;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(12px, 2.2vw, 15px);
+            font-weight: bold;
+            color: #856404;
+            word-break: break-all;
+            overflow-x: auto;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: clamp(8px, 2vw, 15px);
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            flex-shrink: 0;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 2vw, 15px);
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        .speed-control label {
+            font-weight: bold;
+            color: #333;
+            flex: 0 1 auto;
+        }
+        
+        .speed-control input[type="range"] {
+            flex: 1 1 auto;
+            min-width: 120px;
+            max-width: 250px;
+            cursor: pointer;
+            height: 6px;
+        }
+        
+        .speed-value {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 45px;
+            flex: 0 1 auto;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .controls button {
+                flex: 0 1 calc(50% - 4px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls button {
+                flex: 1 1 100%;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Animasi DFS & BFS</h1>
+            <p>Visualisasi interaktif penelusuran graf</p>
+        </header>
+
+        <div class="content">
+            <!-- KONTROL -->
+            <div class="controls">
+                <button id="dfsBtn" onclick="startDFS()">▶ DFS</button>
+                <button id="bfsBtn" onclick="startBFS()">▶ BFS</button>
+                <button id="resetBtn" onclick="resetAnimation()">🔄 Reset</button>
+                <button id="pauseBtn" onclick="togglePause()" disabled>⏸ Pause</button>
+            </div>
+
+            <!-- TARGET SELECTION -->
+            <div class="target-selection">
+                <label for="targetNode"><strong>📍 Target Node:</strong></label>
+                <select id="targetNode" onchange="updateTarget()">
+                    <option value="a7" selected>a7 (Default)</option>
+                    <option value="a1">a1</option>
+                    <option value="a2">a2</option>
+                    <option value="a3">a3</option>
+                    <option value="a4">a4</option>
+                    <option value="a5">a5</option>
+                    <option value="a6">a6</option>
+                    <option value="a8">a8</option>
+                </select>
+                <span id="targetDisplay" style="font-weight: bold; color: #667eea;">Target: a7</span>
+            </div>
+
+            <!-- SPEED CONTROL -->
+            <div class="speed-control">
+                <label for="speedSlider">⚡ Kecepatan:</label>
+                <input type="range" id="speedSlider" min="100" max="2000" value="800" step="100">
+                <span class="speed-value"><span id="speedText">800</span>ms</span>
+            </div>
+
+            <!-- INFO PANEL -->
+            <div class="info-panel">
+                <h3 id="algorithmName">Siap Memulai</h3>
+                <p id="algorithmDesc">Pilih algoritma untuk melihat animasi. Perhatikan warna: abu-abu (belum diperiksa) → kuning (sedang diperiksa) → hijau (sudah dicek) atau merah (target ditemukan).</p>
+            </div>
+
+            <!-- CANVAS -->
+            <div class="canvas-wrapper">
+                <canvas id="graphCanvas"></canvas>
+            </div>
+
+            <!-- URUTAN KUNJUNGAN -->
+            <div class="visit-order">
+                <strong>📊 Urutan:</strong> <span id="visitSequence">Belum ada</span>
+            </div>
+
+            <!-- LEGEND -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #cccccc;"></div>
+                    <span>Belum diperiksa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span>Sedang diperiksa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <span>Sudah dicek</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>🎯 Target!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Graph edges (hubungan node)
+        const edges = [
+            {from: 'a1', to: 'a2'},
+            {from: 'a1', to: 'a3'},
+            {from: 'a2', to: 'a4'},
+            {from: 'a2', to: 'a5'},
+            {from: 'a3', to: 'a6'},
+            {from: 'a4', to: 'a7'},
+            {from: 'a5', to: 'a8'},
+            {from: 'a6', to: 'a1'},
+            {from: 'a8', to: 'a3'}
+        ];
+
+        // Build adjacency list
+        const adjList = {};
+        ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].forEach(node => {
+            adjList[node] = [];
+        });
+        edges.forEach(edge => {
+            adjList[edge.from].push(edge.to);
+        });
+
+        // State
+        let nodeStates = {};
+        let visitSequence = [];
+        let isAnimating = false;
+        let isPaused = false;
+        let currentAlgorithm = null;
+        let targetNode = 'a7';
+        let pauseResolver = null;
+        let nodePositions = {};
+
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Responsive canvas sizing
+        function resizeCanvas() {
+            const wrapper = canvas.parentElement;
+            const rect = wrapper.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            ctx.scale(dpr, dpr);
+            updateNodePositions();
+            draw();
+        }
+
+        // Update node positions based on canvas size
+        function updateNodePositions() {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+            
+            const scale = Math.min(w / 600, h / 500);
+            const offsetX = (w - 600 * scale) / 2;
+            const offsetY = (h - 500 * scale) / 2;
+            
+            nodePositions = {
+                'a1': {x: offsetX + 300 * scale, y: offsetY + 50 * scale},
+                'a2': {x: offsetX + 180 * scale, y: offsetY + 150 * scale},
+                'a3': {x: offsetX + 420 * scale, y: offsetY + 150 * scale},
+                'a4': {x: offsetX + 120 * scale, y: offsetY + 280 * scale},
+                'a5': {x: offsetX + 240 * scale, y: offsetY + 280 * scale},
+                'a6': {x: offsetX + 360 * scale, y: offsetY + 280 * scale},
+                'a7': {x: offsetX + 120 * scale, y: offsetY + 400 * scale},
+                'a8': {x: offsetX + 240 * scale, y: offsetY + 400 * scale}
+            };
+        }
+
+        // Initialize node states
+        function initializeStates() {
+            ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].forEach(node => {
+                nodeStates[node] = 'unvisited';
+            });
+            visitSequence = [];
+        }
+
+        // Update target node
+        function updateTarget() {
+            targetNode = document.getElementById('targetNode').value;
+            document.getElementById('targetDisplay').textContent = `Target: ${targetNode}`;
+            if (!isAnimating) {
+                initializeStates();
+                draw();
+            }
+        }
+
+        // DFS Algorithm
+        async function performDFS() {
+            initializeStates();
+            document.getElementById('algorithmName').textContent = '🔍 Depth-First Search (DFS)';
+            document.getElementById('algorithmDesc').textContent = 'DFS = "Ke Dalam Dulu". Mendalami satu cabang sampai buntu, baru backtrack ke cabang lain.';
+            
+            isAnimating = true;
+            document.getElementById('dfsBtn').disabled = true;
+            document.getElementById('bfsBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('targetNode').disabled = true;
+
+            const visited = {};
+            await dfsRecursive('a1', visited);
+
+            isAnimating = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('targetNode').disabled = false;
+        }
+
+        async function dfsRecursive(node, visited) {
+            if (visited[node]) return;
+            await waitIfPaused();
+
+            visited[node] = true;
+            nodeStates[node] = 'visiting';
+            visitSequence.push(node);
+            draw();
+            await sleep(getSpeed());
+
+            if (node === targetNode) {
+                nodeStates[node] = 'target';
+                draw();
+                return true;
+            }
+
+            nodeStates[node] = 'visited';
+            draw();
+
+            for (let neighbor of adjList[node]) {
+                if (!visited[neighbor]) {
+                    await waitIfPaused();
+                    const found = await dfsRecursive(neighbor, visited);
+                    if (found) return true;
+                }
+            }
+            return false;
+        }
+
+        // BFS Algorithm
+        async function performBFS() {
+            initializeStates();
+            document.getElementById('algorithmName').textContent = '🔍 Breadth-First Search (BFS)';
+            document.getElementById('algorithmDesc').textContent = 'BFS = "Melebar Dulu" (Level by Level). Cek semua tetangga level saat ini sebelum ke level berikutnya.';
+            
+            isAnimating = true;
+            document.getElementById('dfsBtn').disabled = true;
+            document.getElementById('bfsBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('targetNode').disabled = true;
+
+            const visited = {};
+            const queue = ['a1'];
+            visited['a1'] = true;
+            nodeStates['a1'] = 'visiting';
+
+            while (queue.length > 0) {
+                await waitIfPaused();
+
+                const node = queue.shift();
+                visitSequence.push(node);
+                draw();
+                await sleep(getSpeed());
+
+                if (node === targetNode) {
+                    nodeStates[node] = 'target';
+                    draw();
+                    isAnimating = false;
+                    document.getElementById('pauseBtn').disabled = true;
+                    document.getElementById('targetNode').disabled = false;
+                    return;
+                }
+
+                nodeStates[node] = 'visited';
+                draw();
+
+                for (let neighbor of adjList[node]) {
+                    if (!visited[neighbor]) {
+                        visited[neighbor] = true;
+                        nodeStates[neighbor] = 'visiting';
+                        queue.push(neighbor);
+                    }
+                }
+            }
+
+            isAnimating = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('targetNode').disabled = false;
+        }
+
+        // Utility functions
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function waitIfPaused() {
+            return new Promise(resolve => {
+                if (isPaused) {
+                    pauseResolver = resolve;
+                } else {
+                    resolve();
+                }
+            });
+        }
+
+        function getSpeed() {
+            return parseInt(document.getElementById('speedSlider').value);
+        }
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            document.getElementById('speedText').textContent = e.target.value;
+        });
+
+        function togglePause() {
+            if (isAnimating) {
+                isPaused = !isPaused;
+                document.getElementById('pauseBtn').textContent = isPaused ? '▶ Lanjutkan' : '⏸ Pause';
+                if (!isPaused && pauseResolver) {
+                    pauseResolver();
+                    pauseResolver = null;
+                }
+            }
+        }
+
+        async function startDFS() {
+            if (!isAnimating) await performDFS();
+        }
+
+        async function startBFS() {
+            if (!isAnimating) await performBFS();
+        }
+
+        function resetAnimation() {
+            isAnimating = false;
+            isPaused = false;
+            pauseResolver = null;
+            initializeStates();
+            currentAlgorithm = null;
+            document.getElementById('algorithmName').textContent = 'Siap Memulai';
+            document.getElementById('algorithmDesc').textContent = 'Pilih algoritma untuk melihat animasi. Perhatikan warna: abu-abu (belum diperiksa) → kuning (sedang diperiksa) → hijau (sudah dicek) atau merah (target ditemukan).';
+            document.getElementById('pauseBtn').textContent = '⏸ Pause';
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('dfsBtn').disabled = false;
+            document.getElementById('bfsBtn').disabled = false;
+            document.getElementById('targetNode').disabled = false;
+            draw();
+        }
+
+        // Drawing function
+        function draw() {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw edges
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            edges.forEach(edge => {
+                const from = nodePositions[edge.from];
+                const to = nodePositions[edge.to];
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+                
+                // Draw arrow
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                const arrowSize = 10;
+                const endX = to.x - Math.cos(angle) * 25;
+                const endY = to.y - Math.sin(angle) * 25;
+                ctx.beginPath();
+                ctx.moveTo(endX + arrowSize * Math.cos(angle + Math.PI / 6), 
+                          endY + arrowSize * Math.sin(angle + Math.PI / 6));
+                ctx.lineTo(endX, endY);
+                ctx.lineTo(endX + arrowSize * Math.cos(angle - Math.PI / 6), 
+                          endY + arrowSize * Math.sin(angle - Math.PI / 6));
+                ctx.stroke();
+            });
+
+            // Draw nodes
+            const nodeSize = Math.min(w, h) * 0.04;
+            ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].forEach(node => {
+                const pos = nodePositions[node];
+                const state = nodeStates[node];
+                
+                let color;
+                if (state === 'unvisited') color = '#cccccc';
+                else if (state === 'visiting') color = '#ffc107';
+                else if (state === 'visited') color = '#28a745';
+                else if (state === 'target') color = '#dc3545';
+
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, nodeSize, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#000';
+                ctx.font = `bold ${nodeSize * 0.8}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node, pos.x, pos.y);
+            });
+
+            document.getElementById('visitSequence').textContent = visitSequence.join(' → ') || 'Belum ada';
+        }
+
+        // Resize listener
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100);
+        });
+
+        // Initial setup
+        initializeStates();
+        setTimeout(resizeCanvas, 100);
+    </script>
+</body>
+</html>
