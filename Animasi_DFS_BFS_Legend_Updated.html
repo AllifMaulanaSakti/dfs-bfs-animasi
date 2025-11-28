@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animasi DFS & BFS - Graf Tree Interaktif (Legend Terperbarui)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .target-selection {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e8eeff;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .target-selection label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .target-selection select {
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+            color: #333;
+        }
+        
+        .target-selection select:hover {
+            border-color: #764ba2;
+        }
+        
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        canvas {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .info-panel {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .info-panel p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .visit-order {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #ffc107;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: bold;
+            color: #856404;
+            word-break: break-all;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .speed-control label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .speed-control input[type="range"] {
+            width: 200px;
+            cursor: pointer;
+        }
+        
+        .speed-value {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Animasi Pencarian DFS & BFS pada Graf</h1>
+            <p>Visualisasi interaktif proses penelusuran node (Legend Terperbarui - Sedang Diperiksa & Sudah Dicek)</p>
+        </header>
+
+        <div class="content">
+            <!-- KONTROL -->
+            <div class="controls">
+                <button id="dfsBtn" onclick="startDFS()">▶ Mulai DFS</button>
+                <button id="bfsBtn" onclick="startBFS()">▶ Mulai BFS</button>
+                <button id="resetBtn" onclick="resetAnimation()">🔄 Reset</button>
+                <button id="pauseBtn" onclick="togglePause()" disabled>⏸ Pause</button>
+            </div>
+
+            <!-- TARGET SELECTION -->
+            <div class="target-selection">
+                <label for="targetNode"><strong>📍 Pilih Target Node:</strong></label>
+                <select id="targetNode" onchange="updateTarget()">
+                    <option value="a7" selected>a7 (Default)</option>
+                    <option value="a1">a1</option>
+                    <option value="a2">a2</option>
+                    <option value="a3">a3</option>
+                    <option value="a4">a4</option>
+                    <option value="a5">a5</option>
+                    <option value="a6">a6</option>
+                    <option value="a8">a8</option>
+                </select>
+                <span id="targetDisplay" style="margin-left: 15px; font-weight: bold; color: #667eea;">Target: a7</span>
+            </div>
+
+            <!-- SPEED CONTROL -->
+            <div class="speed-control">
+                <label for="speedSlider">⚡ Kecepatan Animasi:</label>
+                <input type="range" id="speedSlider" min="100" max="2000" value="800" step="100">
+                <span class="speed-value"><span id="speedText">800</span>ms</span>
+            </div>
+
+            <!-- INFO PANEL -->
+            <div class="info-panel">
+                <h3 id="algorithmName">Siap Memulai</h3>
+                <p id="algorithmDesc">Pilih algoritma di atas untuk melihat animasi pencarian graf. Perhatikan bagaimana setiap node berubah warna: dari belum diperiksa (abu-abu) → sedang diperiksa (kuning) → sudah dicek (hijau) atau merah jika target ditemukan.</p>
+            </div>
+
+            <!-- CANVAS -->
+            <div class="canvas-wrapper">
+                <canvas id="graphCanvas" width="600" height="500"></canvas>
+            </div>
+
+            <!-- URUTAN KUNJUNGAN -->
+            <div class="visit-order">
+                <strong>📊 Urutan Kunjungan:</strong> <span id="visitSequence">Belum ada</span>
+            </div>
+
+            <!-- LEGEND -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #cccccc;"></div>
+                    <span>⚪ Belum diperiksa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span>🟡 Sedang diperiksa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <span>🟢 Sudah dicek (Bukan target)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>🔴 TARGET DITEMUKAN!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Node positions (x, y)
+        const nodePositions = {
+            'a1': {x: 300, y: 50},
+            'a2': {x: 180, y: 150},
+            'a3': {x: 420, y: 150},
+            'a4': {x: 120, y: 280},
+            'a5': {x: 240, y: 280},
+            'a6': {x: 360, y: 280},
+            'a7': {x: 120, y: 400},
+            'a8': {x: 240, y: 400}
+        };
+
+        // Graph edges (hubungan node)
+        const edges = [
+            {from: 'a1', to: 'a2'},
+            {from: 'a1', to: 'a3'},
+            {from: 'a2', to: 'a4'},
+            {from: 'a2', to: 'a5'},
+            {from: 'a3', to: 'a6'},
+            {from: 'a4', to: 'a7'},
+            {from: 'a5', to: 'a8'},
+            {from: 'a6', to: 'a1'},
+            {from: 'a8', to: 'a3'}
+        ];
+
+        // Build adjacency list
+        const adjList = {};
+        ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].forEach(node => {
+            adjList[node] = [];
+        });
+        edges.forEach(edge => {
+            adjList[edge.from].push(edge.to);
+        });
+
+        // State
+        let nodeStates = {}; // 'unvisited', 'visiting', 'visited', 'target'
+        let visitSequence = [];
+        let isAnimating = false;
+        let isPaused = false;
+        let currentAlgorithm = null;
+        let targetNode = 'a7';
+        let pauseResolver = null;
+
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Initialize node states
+        function initializeStates() {
+            ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].forEach(node => {
+                nodeStates[node] = 'unvisited';
+            });
+            visitSequence = [];
+        }
+
+        // Update target node
+        function updateTarget() {
+            targetNode = document.getElementById('targetNode').value;
+            document.getElementById('targetDisplay').textContent = `Target: ${targetNode}`;
+            if (!isAnimating) {
+                initializeStates();
+                draw();
+            }
+        }
+
+        // DFS Algorithm with animation
+        async function performDFS() {
+            initializeStates();
+            currentAlgorithm = 'DFS';
+            document.getElementById('algorithmName').textContent = '🔍 Depth-First Search (DFS)';
+            document.getElementById('algorithmDesc').textContent = 'DFS = "Ke Dalam Dulu". Algoritma terus mendalami satu cabang (kuning → hijau) sampai buntu atau ketemu target, baru backtrack dan coba cabang lain.';
+            
+            isAnimating = true;
+            document.getElementById('dfsBtn').disabled = true;
+            document.getElementById('bfsBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('targetNode').disabled = true;
+
+            const visited = {};
+            await dfsRecursive('a1', visited);
+
+            isAnimating = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('targetNode').disabled = false;
+        }
+
+        async function dfsRecursive(node, visited) {
+            // Check if already visited
+            if (visited[node]) return;
+
+            // Await pause
+            await waitIfPaused();
+
+            visited[node] = true;
+            nodeStates[node] = 'visiting';
+            visitSequence.push(node);
+            draw();
+            await sleep(getSpeed());
+
+            // Check if target found
+            if (node === targetNode) {
+                nodeStates[node] = 'target';
+                draw();
+                return true; // Signal to stop
+            }
+
+            nodeStates[node] = 'visited';
+            draw();
+
+            for (let neighbor of adjList[node]) {
+                if (!visited[neighbor]) {
+                    await waitIfPaused();
+                    const found = await dfsRecursive(neighbor, visited);
+                    if (found) return true;
+                }
+            }
+
+            return false;
+        }
+
+        // BFS Algorithm with animation
+        async function performBFS() {
+            initializeStates();
+            currentAlgorithm = 'BFS';
+            document.getElementById('algorithmName').textContent = '🔍 Breadth-First Search (BFS)';
+            document.getElementById('algorithmDesc').textContent = 'BFS = "Melebar Dulu" (Level by Level). Algoritma cek semua tetangga level saat ini (kuning → hijau) sebelum turun ke level berikutnya. Menjamin jalur terpendek.';
+            
+            isAnimating = true;
+            document.getElementById('dfsBtn').disabled = true;
+            document.getElementById('bfsBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('targetNode').disabled = true;
+
+            const visited = {};
+            const queue = ['a1'];
+            visited['a1'] = true;
+            nodeStates['a1'] = 'visiting';
+
+            while (queue.length > 0) {
+                await waitIfPaused();
+
+                const node = queue.shift();
+                visitSequence.push(node);
+                draw();
+                await sleep(getSpeed());
+
+                if (node === targetNode) {
+                    nodeStates[node] = 'target';
+                    draw();
+                    isAnimating = false;
+                    document.getElementById('pauseBtn').disabled = true;
+                    document.getElementById('targetNode').disabled = false;
+                    return;
+                }
+
+                nodeStates[node] = 'visited';
+                draw();
+
+                for (let neighbor of adjList[node]) {
+                    if (!visited[neighbor]) {
+                        visited[neighbor] = true;
+                        nodeStates[neighbor] = 'visiting';
+                        queue.push(neighbor);
+                    }
+                }
+            }
+
+            isAnimating = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('targetNode').disabled = false;
+        }
+
+        // Utility functions
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function waitIfPaused() {
+            return new Promise(resolve => {
+                if (isPaused) {
+                    pauseResolver = resolve;
+                } else {
+                    resolve();
+                }
+            });
+        }
+
+        function getSpeed() {
+            return parseInt(document.getElementById('speedSlider').value);
+        }
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            document.getElementById('speedText').textContent = e.target.value;
+        });
+
+        function togglePause() {
+            if (isAnimating) {
+                isPaused = !isPaused;
+                document.getElementById('pauseBtn').textContent = isPaused ? '▶ Lanjutkan' : '⏸ Pause';
+                
+                // If resuming, resolve the pause promise
+                if (!isPaused && pauseResolver) {
+                    pauseResolver();
+                    pauseResolver = null;
+                }
+            }
+        }
+
+        async function startDFS() {
+            if (!isAnimating) {
+                await performDFS();
+            }
+        }
+
+        async function startBFS() {
+            if (!isAnimating) {
+                await performBFS();
+            }
+        }
+
+        function resetAnimation() {
+            isAnimating = false;
+            isPaused = false;
+            pauseResolver = null;
+            initializeStates();
+            currentAlgorithm = null;
+            document.getElementById('algorithmName').textContent = 'Siap Memulai';
+            document.getElementById('algorithmDesc').textContent = 'Pilih algoritma di atas untuk melihat animasi pencarian graf. Perhatikan bagaimana setiap node berubah warna: dari belum diperiksa (abu-abu) → sedang diperiksa (kuning) → sudah dicek (hijau) atau merah jika target ditemukan.';
+            document.getElementById('pauseBtn').textContent = '⏸ Pause';
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('dfsBtn').disabled = false;
+            document.getElementById('bfsBtn').disabled = false;
+            document.getElementById('targetNode').disabled = false;
+            draw();
+        }
+
+        // Drawing functions
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            edges.forEach(edge => {
+                const from = nodePositions[edge.from];
+                const to = nodePositions[edge.to];
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+                
+                // Draw arrow
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                const arrowSize = 10;
+                const endX = to.x - Math.cos(angle) * 25;
+                const endY = to.y - Math.sin(angle) * 25;
+                ctx.beginPath();
+                ctx.moveTo(endX + arrowSize * Math.cos(angle + Math.PI / 6), 
+                          endY + arrowSize * Math.sin(angle + Math.PI / 6));
+                ctx.lineTo(endX, endY);
+                ctx.lineTo(endX + arrowSize * Math.cos(angle - Math.PI / 6), 
+                          endY + arrowSize * Math.sin(angle - Math.PI / 6));
+                ctx.stroke();
+            });
+
+            // Draw nodes
+            ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'].forEach(node => {
+                const pos = nodePositions[node];
+                const state = nodeStates[node];
+                
+                // Determine color
+                let color;
+                if (state === 'unvisited') {
+                    color = '#cccccc';
+                } else if (state === 'visiting') {
+                    color = '#ffc107';
+                } else if (state === 'visited') {
+                    color = '#28a745';
+                } else if (state === 'target') {
+                    color = '#dc3545';
+                }
+
+                // Draw circle
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 25, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw border
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw text
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node, pos.x, pos.y);
+            });
+
+            // Update visit sequence display
+            document.getElementById('visitSequence').textContent = visitSequence.join(' → ') || 'Belum ada';
+        }
+
+        // Initial draw
+        initializeStates();
+        draw();
+    </script>
+</body>
+</html>
